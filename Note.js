@@ -1,5 +1,7 @@
 // Module events
 
+
+/*
 // این ماژول برای رویداد ها هست و هر ایونت دو بخش دارد 
 //یکی خودی صدا زدن ایونت و دیگه اینکه کاری که بعد از صدا زدن ایونت باید انجام شود
 // const EventEmiter = require('events')
@@ -294,6 +296,8 @@ app.delete('/api/users/:id',(req,res)=>{
 })
 
 
+*/
+
 ////////////// Midleware //////////////
 
 // ریکویست ما از طریق میدلور میگزرد هر میدلور میتواند دو کار را بالای ریکوست ما انجام دهد
@@ -387,6 +391,9 @@ app.use(helment());
 /// morgan is a package that we can tacke log http request
 
 // npm i morgan 
+
+
+
 
 /*
 
@@ -549,6 +556,8 @@ we can pass varible to home
 
 
 
+
+/*
 
 
 
@@ -835,8 +844,10 @@ const UserSchema2 = new mongoose.Schema({
     // console.log(result[0]) // from 16.7 that stored on data base it return 16.17
  }
 
+*/
 
 
+/*
 
 ///////////// connect project with database
 
@@ -978,3 +989,385 @@ router.delete('/:id',async (req,res)=>{
 app.listen(8000,()=>{
     console.log('Lisetening on port 8000');
 });
+
+*/
+
+
+
+
+
+//////////  Relation between collection /////////
+
+// sometimes our collection has relationship 
+// 1. refrence relaton 
+// one relation like id of a collection ther is in another collection
+
+// 2. Embeded collection 
+// there is a collecton inside another collection
+
+// 3. Hibrid collection 
+// combinectioin of both ralation 
+// هم آی دی یک کولیکشن را در دیگه کولیکشن هست و هم بعضی را پراپرتی های یک کولیکشن در دیگه کولیکشن هست
+
+
+/*
+
+//// 1. refrence
+
+const mongoose = require('mongoose');
+
+mongoos
+    .connect("mongodb://localhost:27017/relation")
+    .then(()=>{
+        console.log('connected to mongodb')
+    })
+    .catch(()=>{
+        console.log("could not connect to mongodb")
+    });
+
+// const bookSchema = new mongoos.Schema({
+//     title: String,
+//     pages: Number,
+// })
+
+// const Book = mongoos.model("Book",bookSchema);
+
+// both are same
+
+const Book = mongoos.model('Book',new mongoos.Schema({
+    title: String,
+    pages: Number,
+}))
+
+// const UserSchema = new mongoos.Schema({
+//     first_name: String,
+//     last_name: String,
+//     book: {
+//         type: mongoos.Schema.types.ObjectId,
+//     ref: 'Book' // این آبجیکت آی دی مربوط به کدام کالیکشن هست
+//     }
+// })
+
+// const User = mongoos.model("User",UserSchema);
+
+// both are same
+
+const User = mongoos.model("User",new UserSchema({
+    first_name: String,
+    last_name: String,
+    book: {
+        type: mongoos.sch.types.ObjectId,
+        ref: "Book"
+    }
+}))
+
+
+async function createUser(firs_name,last_name,book_id){
+    const user = await new User({
+        firs_name,
+        last_name,
+        book: book_id
+    })
+
+    const result = await user.save();
+    console.log(user)
+}
+
+async function createBook(title,pages){
+    const book = await new Book({
+        title,
+        pages 
+    })
+    const result = book.save()
+
+    console.log(result)
+}
+
+async function getUsers(){
+    const users = await User.find();
+
+    console.log(users)
+}
+
+// at first we create book and users
+createBook('C++ language',100);
+createBook("Java langauge",150);
+
+// after that created book we must copy the value of _id field and pass it id to user for create user
+
+createUser('Faiz Mohammad','Rahmdel','4234234f3242c2vc2'); // it is fake id
+
+getUsers(); /// it get the users
+
+// if you want to see the book document insted of it's id you can do as below // populate() method
+
+async function getUsers(){
+    const users = await User.find().populate('book');
+
+    console.log(users)
+}
+
+// if you want a specefic filed you can do as belwo
+async function getUsers(){
+    const users = await User.find().populate('book','title');
+    // and with space we can chose multiple field populate('book','title pages')  // if we add - right side of a field 
+    // it does not get that field
+    // if we have another field as forign we can reuse papulate()
+    //.populate('book','title').populate('book','title');;
+
+    console.log(users)
+}
+
+
+*/
+
+//////// 2.  Embeding /////////////
+
+
+/*
+
+const bookSchema = new mongoos.Schema({
+    title: String,
+    pages: Number,
+})
+
+const Book = mongoos.model("Book",bookSchema);
+
+
+const UserSchema = new mongoos.Schema({
+    first_name: String,
+    last_name: String,
+    book: bookSchema,// in Embede we place our schema here instaed of id
+})
+
+
+
+async function createUser(firs_name,last_name,book){
+    const user = await new User({
+        firs_name,
+        last_name,
+        book: book,
+    })
+
+    const result = await user.save();
+    console.log(result)
+}
+
+createUser('Ali','Rashady',new Book({title: 'JavaScript Programming',pages: 100}));
+
+async function getUsers(){
+    const users = await User.find();
+    console.log(users)
+}
+
+
+
+// for update a document 
+// one way
+async function updateUser(id){
+    const user = await User.findById(id);
+    user.book.title = 'Python programmin';
+
+    user.save();
+}
+
+updateUser('345435dfj35')  // it;s fake id
+// direct update
+async function updateUser(id){
+    const user = await User.ondateOne({_id: id},{
+        $set: {
+            'book.title': 'Fundamantal of Database'
+        }
+    })
+}
+
+updateUser('345435dfj35')  // it;s fake id
+
+// for deleting a field we can use from unset operator as belos
+
+updateUser('345435dfj35')  // it;s fake id
+// direct update
+async function updateUser(id){
+    const user = await User.ondateOne({_id: id},{
+        $unset: {
+            'book.title': '' // it must set to an empty string
+        }
+    })
+}
+
+updateUser('345435dfj35')  // it;s fake id
+
+///// if a user has many books we can do as below
+
+const bookSchema = new mongoos.Schema({
+    title: String,
+    pages: Number,
+})
+
+const Book = mongoos.model("Book",bookSchema);
+
+
+const UserSchema = new mongoos.Schema({
+    first_name: String,
+    last_name: String,
+    book: [bookSchema] // it must be a array of books
+})
+
+
+async function createUser(firs_name,last_name,books){
+    const user = await new User({
+        firs_name,
+        last_name,
+        books: books,
+    })
+
+    const result = await user.save();
+    console.log(result)
+}
+
+createUser('Ali','Rashady',[
+    new Book({title: 'Jav Programming',pages: 100}),
+    new Book({title: 'JavaScript Programming',pages: 100}),
+    new Book({title: 'C Programming',pages: 100})
+]);
+
+/// creating a function for add a book to a user books
+
+async function addBook(userId,book){
+    const user = new User.findById(userId);
+
+    user.books.push(book);
+    user.save();
+}
+
+addBook('53457847erh75',new User({title: "C# programing",pages: 325}));
+
+/// deletin a book 
+
+async function removeBook(userId,bookId){
+    const user = new User.findById(userId);
+    const book = user.books.id(bookId) // it find a book using book id
+    book.remove();
+    await user.save();
+}
+
+removeBook('845793875834f','534985743fjdskf');
+
+////////// validation object id  //////
+
+// آی دی در مانگو یک رشته 24 کارکتری از اعداد و حروف هست اگر کسی یک آی دی عددی غیر از آین را 
+// ریکویست کند یک پرامیس ریجیکت می شود که ما باید آنرا اندل کنیم
+
+router.get('/:id', async (req,res)=>{
+    if(mongoose.Types.ObjectId.isValid(req.params.id)) // at first the id must be cheek for valid id
+    {
+        return res.status(400).send('invalid id');
+
+    }
+    const user = await new User.findById(req.params.id)
+
+    if(!user){
+        return res.status(404).json({
+            data: null,
+            message: 'the user with given id was not found'
+        })
+    }
+
+    res.json({
+        data: user,
+        message: 'ok'
+    })
+
+    
+})
+*/
+
+
+
+////////////// new Project with new features ///////////// 
+
+// در این بخش یک پروژه جدید را ایجاد می کنیم و مواردی زیادی را بشکل کوتا و خلاصه کد کردن در این 
+// پروژه عملی خواهیم کرد 
+
+// needed to install
+
+// npm i express express-validator mongoose mongoose-timestamp config debug
+
+
+// we must have a root file like index.js or app.js 
+// in this root file file must have the below codes
+
+const express = require('express')
+const app = express();
+
+const mongoose = require('mongoose');
+const debug = require('debuge')
+const config = require('config')
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use(express.static('public'))
+
+
+// our project must have the below structure 
+
+// we must have a config folder inside of this folder we must have the below files
+
+/*
+// 1. default.json
+
+{
+    "name": "auth project" // it is our project name and it must have double qutition
+    "db": {
+        "address": "mongodb://localhost:27017/authproject"
+    }
+}
+
+// 2. development.json
+
+{
+    "name": "auth project -development" // it is our project name and it must have double qutition
+}
+
+// 3. production.json
+
+{
+    "name": "auth project -production" // it is our project name and it must have double qutition
+}
+
+// custom-environments-variables.json
+*/
+
+// in the root file we must connect with database 
+
+mongoose.connect(config.get('db.address'))
+    .then(()=>{
+        console.log('connected with mongo db')
+    }).catch(()=>{
+        console.log('could not connect with mongo db')
+    })
+const port = process.env.PORT || 3000
+
+app.listen(port,()=>{
+    console.log(`lestning on port${port}`)
+})
+
+
+/////// in the root directory we must creae a src folder inside it we must create the below folders
+//1. routes: we must create routes folder for our route
+//2. models: we must crete models folder for our models
+//3. middlewares: for our middlewares
+
+// inside routes folder we must create a file index.js 
+// inside this file must be our all routes
+// routes/index.js
+const express = require('express')
+const router = express.Router();
+
+module.exports = router
+
+// after that we must export this router inside rood index.js file
+export router = rquire('./src/routes/index') // if our file name be index we can don't write the index: src/routes
+
+// after it we must use a middle ware like: 
+app.use('/api',router) // it redirct all our request to router
